@@ -10,24 +10,28 @@
     <li><a href="/basket.html">Basket</a></li>
 </ul>
 
-<table style="width:100%">
+<table style="width:100%" id="basket">
   <tr>
+    <th>Id</th>
     <th>Name</th>
     <th>Quantity</th> 
     <th>Price</th>
   </tr>
-  <tr>
-    <td>Maillot</td>
-    <td>2</td> 
-    <td>24</td>
+  <tr class="prd_line">
+    <td class="prd_id">0</td>
+    <td class="prd_name" >Maillot</td>
+    <td class="prd_quantity">2</td> 
+    <td class="prd_price">24</td>
   </tr>
-  <tr>
-    <td>Slip</td>
-    <td>8</td> 
-    <td>38</td>
+  <tr class="prd_line">
+    <td class="prd_id">1</td>
+    <td class="prd_name">Slip</td>
+    <td class="prd_quantity">8</td> 
+    <td class="prd_price">38</td>
   </tr>
 </table>
 
+<h3>Total: <span id="total">60</span> euros</h3>
 <script type="text/javascript" src="./bundle.js"></script>
 
 </body>

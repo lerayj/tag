@@ -1,6 +1,9 @@
 import Sizzle from 'sizzle';
 import Cookies from 'js-cookie';
 import firebase from 'firebase';
+import uuid from 'uuid/V1';
+import email_validator from 'email-validator';
+
 // Initialize Firebase
 var config = {
     apiKey: "AIzaSyDbYDeR_xY5rGkJBkWv9w1Wof1D5i-SWpo",
@@ -20,9 +23,17 @@ console.log("websiteKey: ", websiteKey);
 //TEST
 websiteKey = "toto_com";
 
+
+var sessionId = getCookieSession();
+console.log("Session: ", sessionId);
 getConfig(websiteKey).then((config) => {
     console.log("CONFIG: ", config);
+    saveMail(config, websiteKey, sessionId);
+    confirmSoldBasket(config, websiteKey, sessionId);
+    window.onload = saveBasket(config, websiteKey, sessionId);
 });
+
+
 
 //Get the config for given website.
 //Return Promise
@@ -33,50 +44,76 @@ function getConfig(websiteId){
     });
 }
 
-
-
-
-
-
-//writeUserData("123", "toto", "toto@gmail.com");
-
-
-
-// var truc = Sizzle("#test");
-// console.log("TOTO: ", truc);
-// Cookies.set('name', 'toto');
-
-//var cookie = getCookieSession();
-
-
+//TODO: Faire des règles plus générique sur les urls
+function confirmSoldBasket(config, websiteId, sessionId){
+    var currentUrl = window.location.pathname.substr(1);
+    var findUrl = config.confirm_url.find((url) => currentUrl == url);
+    console.log("Save to: ", 'websites/' + websiteId + '/sessions/' + sessionId);
+    if(findUrl){
+        firebase.database().ref('websites/' + websiteId + '/sessions/' + sessionId).update({converted: true});
+        Cookies.remove('user_tag_id');
+    }
+    else
+        console.log("Not Converted");
+}
 
 function getCookieSession(){
-    var cookie = Cookies.get('name');
-    if(cookie)
+    var cookie = Cookies.get('user_tag_id');
+    if(cookie){
         console.log("Cookie already set: ", cookie);
+    }
     else{
-        Cookies.set('name', 'tutu');
-        console.log("Cookie is not set.");
-        console.log("Cookie now set to : ", Cookies.get('name'));
-    } 
+        Cookies.set('user_tag_id', uuid());
+        cookie = Cookies.get('user_tag_id');
+        console.log("Setting cookie to: ", cookie);
+    }
+    return cookie;
 }
 
-function writeUserData(userId, name, email) {
-  firebase.database().ref('users/' + userId).set({
-    username: name,
-    email: email
-  });
+function saveMail(config, websiteId, sessionId){
+    console.log("Capture mail");
+    var mail = Sizzle(config.email);
+    console.log("Mail: ", mail);
+    if(mail.length != 0){
+        var refreshIntervalId = window.setInterval(() => {
+            mail = Sizzle(config.email)[0].value;
+            console.log("mail: ", mail, " valid: ", email_validator.validate(mail));
+            if(email_validator.validate(mail)){
+                console.log("Save: ", mail, " for session: ", sessionId);
+                firebase.database().ref('websites/' + websiteId + '/sessions/' + sessionId).update({email: mail});
+                setTimeout(() => { clearInterval(refreshIntervalId); }, 2000);
+            }
+        }, 500);
+    }        
 }
 
-function saveMail(config){
+//TODO: Faire des règles plus générique sur les urls
+//TODO: Faire la config approprié au test
+function saveBasket(config, websiteId, sessionId){
+    if(config.basket.url == window.location.pathname.substr(1)){
+        var total = Sizzle(config.basket.total)[0].textContent,
+            linesProducts = Sizzle(config.basket.container + " " + config.basket.product_line),
+            updates = {},
+            basket = 'websites/' + websiteId + '/sessions/' + sessionId + '/basket';
+
+        linesProducts.forEach((line, idx) => {
+            var product_id = Sizzle(config.basket.product_id)[idx].textContent;
+            updates[basket + '/products/' + product_id + '/product_name'] = Sizzle(config.basket.product_name)[0].textContent;
+            updates[basket + '/products/' + product_id + '/product_price'] = Sizzle(config.basket.product_price)[0].textContent;
+            updates[basket + '/products/' + product_id + '/product_quantity'] = Sizzle(config.basket.product_quantity)[0].textContent;
+            
+        });
+        console.log("Updates: ", updates);
+        updates[basket + '/total'] = total;
+        firebase.database().ref().update(updates);
+    }
 
 }
 
-function saveBasket(config){
+//TODO: For SAP navigation without HashChange
+// window.onpopstate = function(event) {
+//   console.log("location: " + document.location + ", state: " + JSON.stringify(event.state));
+// };
 
-}
-
-function confirmSoldBasket(basketId){
-
-}
-
+//TODO: For SAP  navigation with HashChange
+//location.hash

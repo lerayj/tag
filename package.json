@@ -4,8 +4,10 @@
   "description": "",
   "main": "app/index.js",
   "dependencies": {
+    "email-validator": "^1.0.7",
     "firebase": "^3.9.0",
     "sizzle": "^2.3.3",
+    "uuid": "^3.0.1",
     "webpack": "^2.5.1"
   },
   "devDependencies": {
