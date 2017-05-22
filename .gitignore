@@ -1,1 +1,5 @@
 /node_modules
+/services/node_modules
+/services/emailQueue/firebase_secret.json
+/services/emailQueue/node_modules
+/services/emailBuilder/node_modules

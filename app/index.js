@@ -19,12 +19,12 @@ firebase.initializeApp(config);
 var database = firebase.database();
 
 //var websiteKey = window.location.hostname.replace(/\./g, "_");
-console.log("host: ", window.location.host, " psl: ", psl.parse(window.location.host).domain, "real psl: ", psl);
-var websiteKey = psl.parse(window.location.host).domain.replace(/\./g, "_");
+//console.log("host: ", window.location.host, " psl: ", psl.parse(window.location.host).domain, "real psl: ", psl);
+//var websiteKey = psl.parse(window.location.host).domain.replace(/\./g, "_");
 console.log("websiteKey: ", websiteKey);
 
 //TEST
-//websiteKey = "toto_com";
+var websiteKey = "toto_com";
 
 
 var sessionId = getCookieSession();
@@ -43,6 +43,7 @@ getConfig(websiteKey).then((config) => {
 //Return Promise
 function getConfig(websiteId){
     return new Promise((resolve, reject) => {
+        console.log("websiteId: ", websiteId);
         var conf = firebase.database().ref('websites/' + websiteId + '/config');
         conf.on('value', snapshot => resolve(snapshot.val()));
     });
