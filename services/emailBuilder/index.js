@@ -6,3 +6,26 @@
 //update the database to attributed true
 //make a daily report of attribution (witch session and for how much)
 //MAKE MONEY
+
+var admin = require("firebase-admin");
+
+// Set the configuration for your app
+// TODO: Replace with your project's config object
+var config = {
+    apiKey: '<your-api-key>',
+    authDomain: '<your-auth-domain>',
+    databaseURL: '<your-database-url>',
+    storageBucket: '<your-storage-bucket>'
+};
+firebase.initializeApp(config);
+
+const keyFilename="./my-private-api-key-file.json"; //replace this with api key file
+const projectId = "my-project-id-should-go-here" //replace with your project id
+const bucketName = `${projectId}.appspot.com`;
+
+const gcs = require('@google-cloud/storage')({
+    projectId,
+    keyFilename
+});
+
+const bucket = gcs.bucket(bucketName);

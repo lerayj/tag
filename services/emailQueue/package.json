@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "nodemon index.js",
+    "ui": "node_modules/kue/bin/kue-dashboard -p 3050 -r redis://toto@redis-14773.c3.eu-west-1-2.ec2.cloud.redislabs.com:14773 -q prefix"
   },
   "author": "",
   "license": "ISC",

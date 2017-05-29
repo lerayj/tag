@@ -1,6 +1,8 @@
-var admin = require("firebase-admin");
-    // kue = require('kue'),
-    // queue = kue.createQueue();
+var admin = require("firebase-admin"),
+    kue = require('kue'),
+    queue = kue.createQueue({
+        redis: 'redis://toto@redis-14773.c3.eu-west-1-2.ec2.cloud.redislabs.com:14773'
+    });
 
 //TODO: get the credentials certificate
 var serviceAccount = require("./firebase_secret.json");
@@ -55,6 +57,7 @@ refWebsites.on("child_added", function(snapshot) {
                     //Si l'update viens du mail et qu'il y a un basket ou Si l'update viens d'un basket et il y a un mail
                     if((sessionData.email && sendRulesAccepted(sessionData.basket))){
                         //TODO: Push to queue
+
                     }
                 })
             }, function (errorObject) {
@@ -91,15 +94,17 @@ function getSessionData(website, sessionId){
 
 //TODO: On new session with email and basket, add to Kue
 
-// var email = queue.create('email', {
-//     title: 'Account renewal required'
-//   , to: 'tj@learnboost.com'
-//   , template: 'renewal-email'
-// }).delay(milliseconds)
-//   .priority('high')
-//   .save(function(err){
-//    if( !err ) console.log( job.id );
-// });
+var milliseconds = 30000;
+
+var email = queue.create('email', {
+    title: 'Account renewal required'
+  , to: 'tj@learnboost.com'
+  , template: 'renewal-email'
+}).delay(milliseconds)
+  .priority('high')
+  .save(function(err){
+   if( !err ) console.log( "ADDED");
+});
 
 
 // queue.process('email',  20, function(job, done){
