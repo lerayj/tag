@@ -172,6 +172,10 @@ var saveRetailBasket = function(config, basket, linesProducts, updates){
         console.log("Product name: ", product_name);
         updates[basket + '/products/' + product_id + '/product_name'] = product_name;
 
+        var product_image = attributeValue(config, 'product_name', line);
+        console.log("Product image: ", product_image);
+        updates[basket + '/products/' + product_image + '/product_image'] = product_image;
+
         var product_price = attributeValue(config, 'product_price', line);
         console.log("Product price: ", product_price);
         updates[basket + '/products/' + product_id + '/product_price'] = product_price;

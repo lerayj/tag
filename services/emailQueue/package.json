@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "firebase-admin": "^4.2.1",
-    "kue": "^0.11.5"
+    "kue": "^0.11.5",
+    "request": "^2.81.0"
   }
 }
