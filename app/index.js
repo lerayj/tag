@@ -31,7 +31,8 @@ var sessionId = getCookieSession();
 console.log("Session: ", sessionId);
 getConfig(websiteKey).then((config) => {
     console.log("CONFIG: ", config);
-    saveMail(config, websiteKey, sessionId);
+    //saveMail(config, websiteKey, sessionId);
+    chooseEmailCapture(config, websiteKey, sessionId);
     confirmSoldBasket(config, websiteKey, sessionId);
     //    window.onload = saveBasket(config, websiteKey, sessionId);
     saveBasket(config, websiteKey, sessionId);
@@ -75,21 +76,45 @@ function getCookieSession(){
     return cookie;
 }
 
-function saveMail(config, websiteId, sessionId){
+function saveMail(selector, type, websiteId, sessionId){
     console.log("Capture mail");
-    var mail = Sizzle(config.email);
+    var mail = Sizzle(selector);
     console.log("Mail: ", mail);
     if(mail.length != 0){
         var refreshIntervalId = window.setInterval(() => {
-            mail = Sizzle(config.email)[0].value;
+            mail = Sizzle(selector)[0].value;
             console.log("mail: ", mail, " valid: ", email_validator.validate(mail));
             if(email_validator.validate(mail)){
                 console.log("Save: ", mail, " for session: ", sessionId);
-                firebase.database().ref('websites/' + websiteId + '/sessions/' + sessionId).update({email: mail});
+                var update = {};
+                update[type] = mail;
+                firebase.database().ref('websites/' + websiteId + '/sessions/' + sessionId + '/emails').update(update);
                 setTimeout(() => { clearInterval(refreshIntervalId); }, 2000);
             }
         }, 500);
     }        
+}
+
+
+function chooseEmailCapture(config, websiteId, sessionId){
+    var currentUrl = window.location.pathname.substr(1);
+    if(currentUrl == config.emails.checkout.url){
+        //TODO: capture checkout
+        console.log("--CHECKOUT MAIL--");
+        saveMail(config.emails.checkout.existing, "email_checkout_existing", websiteId, sessionId);
+        saveMail(config.emails.checkout.guest,  "email_checkout_guest", websiteId, sessionId);
+        saveMail(config.emails.checkout.new,  "email_checkout_new", websiteId, sessionId);
+    } else if (currentUrl == config.emails.login.url){
+        //TODO: capture login
+        console.log("--LOGIN MAIL--");
+        saveMail(config.emails.login.selector,  "email_login", websiteId, sessionId);
+    } else if (currentUrl == config.emails.register.url){
+        //TODO: capture register
+        console.log("--REGISTER MAIL--");
+        saveMail(config.emails.register.selector,  "email_register", websiteId, sessionId);
+    }
+    //TODO: capture everywhere
+    saveMail(config.emails.everywhere, "email_top_login", websiteId, sessionId);
 }
 
 //TODO: Faire des règles plus générique sur les urls
