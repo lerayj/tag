@@ -20,12 +20,12 @@ var database = firebase.database();
 
 //var websiteKey = window.location.hostname.replace(/\./g, "_");
 //console.log("host: ", window.location.host, " psl: ", psl.parse(window.location.host).domain, "real psl: ", psl);
-//var websiteKey = psl.parse(window.location.host).domain.replace(/\./g, "_");
+var websiteKey = psl.parse(window.location.host).domain.replace(/\./g, "_");
 console.log("websiteKey: ", websiteKey);
 
 //TEST
 // var websiteKey = "villagesclubsdusoleil_com";
-var websiteKey = "toto_com";
+//var websiteKey = "toto_com";
 
 var sessionId = getCookieSession();
 console.log("Session: ", sessionId);
@@ -172,9 +172,9 @@ var saveRetailBasket = function(config, basket, linesProducts, updates){
         console.log("Product name: ", product_name);
         updates[basket + '/products/' + product_id + '/product_name'] = product_name;
 
-        var product_image = attributeValue(config, 'product_name', line);
+        var product_image = attributeValue(config, 'product_image', line);
         console.log("Product image: ", product_image);
-        updates[basket + '/products/' + product_image + '/product_image'] = product_image;
+        updates[basket + '/products/' + product_id + '/product_image'] = product_image;
 
         var product_price = attributeValue(config, 'product_price', line);
         console.log("Product price: ", product_price);
