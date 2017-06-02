@@ -3,4 +3,4 @@
 /services/emailQueue/firebase_secret.json
 /services/emailQueue/node_modules
 /services/emailBuilder/node_modules
-/dist/bundle.js
+/dist
