@@ -20,18 +20,19 @@ var database = firebase.database();
 
 //var websiteKey = window.location.hostname.replace(/\./g, "_");
 //console.log("host: ", window.location.host, " psl: ", psl.parse(window.location.host).domain, "real psl: ", psl);
-//var websiteKey = psl.parse(window.location.host).domain.replace(/\./g, "_");
+var websiteKey = psl.parse(window.location.host).domain.replace(/\./g, "_");
 console.log("websiteKey: ", websiteKey);
 
 //TEST
 // var websiteKey = "villagesclubsdusoleil_com";
-var websiteKey = "toto_com";
+//var websiteKey = "toto_com";
 
 var sessionId = getCookieSession();
 console.log("Session: ", sessionId);
 getConfig(websiteKey).then((config) => {
     console.log("CONFIG: ", config);
-    saveMail(config, websiteKey, sessionId);
+    //saveMail(config, websiteKey, sessionId);
+    chooseEmailCapture(config, websiteKey, sessionId);
     confirmSoldBasket(config, websiteKey, sessionId);
     //    window.onload = saveBasket(config, websiteKey, sessionId);
     saveBasket(config, websiteKey, sessionId);
@@ -64,32 +65,66 @@ function confirmSoldBasket(config, websiteId, sessionId){
 
 function getCookieSession(){
     var cookie = Cookies.get('user_tag_id');
+    // var cookie_session = Cookies.get("session_id")
+    
+    // if(cookie_session){
+    //     console.log("session id already exist")
+    // } else {
+    //     console.log("Set session id");
+    // }
+
     if(cookie){
         console.log("Cookie already set: ", cookie);
     }
     else{
+        //set Cookie user for 30 days
         Cookies.set('user_tag_id', uuid());
         cookie = Cookies.get('user_tag_id');
         console.log("Setting cookie to: ", cookie);
     }
+    
     return cookie;
 }
 
-function saveMail(config, websiteId, sessionId){
+function saveMail(selector, type, websiteId, sessionId){
     console.log("Capture mail");
-    var mail = Sizzle(config.email);
+    var mail = Sizzle(selector);
     console.log("Mail: ", mail);
     if(mail.length != 0){
         var refreshIntervalId = window.setInterval(() => {
-            mail = Sizzle(config.email)[0].value;
+            mail = Sizzle(selector)[0].value;
             console.log("mail: ", mail, " valid: ", email_validator.validate(mail));
             if(email_validator.validate(mail)){
                 console.log("Save: ", mail, " for session: ", sessionId);
-                firebase.database().ref('websites/' + websiteId + '/sessions/' + sessionId).update({email: mail});
+                var update = {};
+                update[type] = mail;
+                firebase.database().ref('websites/' + websiteId + '/sessions/' + sessionId + '/emails').update(update);
                 setTimeout(() => { clearInterval(refreshIntervalId); }, 2000);
             }
         }, 500);
     }        
+}
+
+
+function chooseEmailCapture(config, websiteId, sessionId){
+    var currentUrl = window.location.pathname.substr(1);
+    if(currentUrl == config.emails.checkout.url){
+        //TODO: capture checkout
+        console.log("--CHECKOUT MAIL--");
+        saveMail(config.emails.checkout.existing, "email_checkout_existing", websiteId, sessionId);
+        saveMail(config.emails.checkout.guest,  "email_checkout_guest", websiteId, sessionId);
+        saveMail(config.emails.checkout.new,  "email_checkout_new", websiteId, sessionId);
+    } else if (currentUrl == config.emails.login.url){
+        //TODO: capture login
+        console.log("--LOGIN MAIL--");
+        saveMail(config.emails.login.selector,  "email_login", websiteId, sessionId);
+    } else if (currentUrl == config.emails.register.url){
+        //TODO: capture register
+        console.log("--REGISTER MAIL--");
+        saveMail(config.emails.register.selector,  "email_register", websiteId, sessionId);
+    }
+    //TODO: capture everywhere
+    saveMail(config.emails.everywhere, "email_top_login", websiteId, sessionId);
 }
 
 //TODO: Faire des règles plus générique sur les urls
@@ -146,6 +181,10 @@ var saveRetailBasket = function(config, basket, linesProducts, updates){
         var product_name = attributeValue(config, 'product_name', line);
         console.log("Product name: ", product_name);
         updates[basket + '/products/' + product_id + '/product_name'] = product_name;
+
+        var product_image = attributeValue(config, 'product_image', line);
+        console.log("Product image: ", product_image);
+        updates[basket + '/products/' + product_id + '/product_image'] = product_image;
 
         var product_price = attributeValue(config, 'product_price', line);
         console.log("Product price: ", product_price);

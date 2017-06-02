@@ -7,11 +7,11 @@ module.exports = {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist')
   },
-  plugins: [
-    new webpack.optimize.UglifyJsPlugin({
-      compress: { warnings: false }
-    })
-  ],
+  // plugins: [
+  //   new webpack.optimize.UglifyJsPlugin({
+  //     compress: { warnings: false }
+  //   })
+  // ],
   module: {
     rules: [{
       test: /\.js$/,
