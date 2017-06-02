@@ -65,14 +65,24 @@ function confirmSoldBasket(config, websiteId, sessionId){
 
 function getCookieSession(){
     var cookie = Cookies.get('user_tag_id');
+    // var cookie_session = Cookies.get("session_id")
+    
+    // if(cookie_session){
+    //     console.log("session id already exist")
+    // } else {
+    //     console.log("Set session id");
+    // }
+
     if(cookie){
         console.log("Cookie already set: ", cookie);
     }
     else{
+        //set Cookie user for 30 days
         Cookies.set('user_tag_id', uuid());
         cookie = Cookies.get('user_tag_id');
         console.log("Setting cookie to: ", cookie);
     }
+    
     return cookie;
 }
 
