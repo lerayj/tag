@@ -4,6 +4,7 @@ import firebase from 'firebase';
 import uuid from 'uuid/V1';
 import email_validator from 'email-validator';
 import psl from 'psl';
+require('js-logger').useDefaults();
 
 // Initialize Firebase
 var config = {
@@ -18,24 +19,27 @@ firebase.initializeApp(config);
 
 var database = firebase.database();
 
+console.log("Env: ", process.env.NODE_ENV)
+if(process.env.NODE_ENV == 'production')
+    logger.setLevel(logger.OFF);
+
 //var websiteKey = window.location.hostname.replace(/\./g, "_");
 //console.log("host: ", window.location.host, " psl: ", psl.parse(window.location.host).domain, "real psl: ", psl);
-var websiteKey = psl.parse(window.location.host).domain.replace(/\./g, "_");
+//var websiteKey = psl.parse(window.location.host).domain.replace(/\./g, "_");
 console.log("websiteKey: ", websiteKey);
-
 //TEST
 // var websiteKey = "villagesclubsdusoleil_com";
-//var websiteKey = "toto_com";
+var websiteKey = "toto_com";
 
-var sessionId = getCookieSession();
-console.log("Session: ", sessionId);
+var user_ids = getCookieSession();
+console.log("Session: ", user_ids.user_cookie);
 getConfig(websiteKey).then((config) => {
     console.log("CONFIG: ", config);
     //saveMail(config, websiteKey, sessionId);
-    chooseEmailCapture(config, websiteKey, sessionId);
-    confirmSoldBasket(config, websiteKey, sessionId);
+    chooseEmailCapture(config, websiteKey, user_ids.user_cookie, user_ids.session_cookie);
+    confirmSoldBasket(config, websiteKey, user_ids.user_cookie, user_ids.session_cookie);
     //    window.onload = saveBasket(config, websiteKey, sessionId);
-    saveBasket(config, websiteKey, sessionId);
+    saveBasket(config, websiteKey, user_ids.user_cookie, user_ids.session_cookie);
 });
 
 
@@ -51,42 +55,48 @@ function getConfig(websiteId){
 }
 
 //TODO: Faire des règles plus générique sur les urls
-function confirmSoldBasket(config, websiteId, sessionId){
+function confirmSoldBasket(config, websiteId, userId, sessionId){
     var currentUrl = window.location.pathname.substr(1);
     var findUrl = config.confirm_url.find((url) => currentUrl == url);
-    console.log("Save to: ", 'websites/' + websiteId + '/sessions/' + sessionId);
+    console.log("Save to: ", 'websites/' + websiteId + '/users/' + userId + '/sessions/' + sessionId);
     if(findUrl){
-        firebase.database().ref('websites/' + websiteId + '/sessions/' + sessionId).update({converted: true});
+        firebase.database().ref('websites/' + websiteId + '/users/' + userId + '/sessions/' + sessionId).update({converted: true});
         Cookies.remove('user_tag_id');
     }
     else
         console.log("Not Converted");
 }
 
+//Return cookie user id and the current session cookie id
 function getCookieSession(){
-    var cookie = Cookies.get('user_tag_id');
-    // var cookie_session = Cookies.get("session_id")
-    
-    // if(cookie_session){
-    //     console.log("session id already exist")
-    // } else {
-    //     console.log("Set session id");
-    // }
+    var user_cookie = Cookies.get('user_tag_id');
 
-    if(cookie){
-        console.log("Cookie already set: ", cookie);
+    if(user_cookie){
+        console.log("Cookie user already set: ", user_cookie);
     }
     else{
-        //set Cookie user for 30 days
-        Cookies.set('user_tag_id', uuid());
-        cookie = Cookies.get('user_tag_id');
-        console.log("Setting cookie to: ", cookie);
+        //set Cookie user for one year
+        Cookies.set('user_tag_id', uuid(), { expires: 365 });
+        user_cookie = Cookies.get('user_tag_id');
+        console.log("Setting cookie user to: ", user_cookie);
     }
     
-    return cookie;
+    var session_cookie = Cookies.get("session_id")
+    
+    if(session_cookie){
+        console.log("session cookie id already exist");
+    } else {
+        console.log("Set session id");
+        Cookies.set('session_id', uuid());
+        session_cookie = Cookies.get('session_id');
+        console.log("Setting cookie sessionto: ", user_cookie);
+    }
+
+
+    return {user_cookie, session_cookie};
 }
 
-function saveMail(selector, type, websiteId, sessionId){
+function saveMail(selector, type, websiteId, userId, sessionId){
     console.log("Capture mail");
     var mail = Sizzle(selector);
     console.log("Mail: ", mail);
@@ -95,10 +105,10 @@ function saveMail(selector, type, websiteId, sessionId){
             mail = Sizzle(selector)[0].value;
             console.log("mail: ", mail, " valid: ", email_validator.validate(mail));
             if(email_validator.validate(mail)){
-                console.log("Save: ", mail, " for session: ", sessionId);
+                console.log("Save: ", mail, " for session: ", sessionId, " on client: ", userId);
                 var update = {};
                 update[type] = mail;
-                firebase.database().ref('websites/' + websiteId + '/sessions/' + sessionId + '/emails').update(update);
+                firebase.database().ref('websites/' + websiteId + '/users/' + userId + '/sessions/' + sessionId + '/emails').update(update);
                 setTimeout(() => { clearInterval(refreshIntervalId); }, 2000);
             }
         }, 500);
@@ -106,30 +116,30 @@ function saveMail(selector, type, websiteId, sessionId){
 }
 
 
-function chooseEmailCapture(config, websiteId, sessionId){
+function chooseEmailCapture(config, websiteId, userId, sessionId){
     var currentUrl = window.location.pathname.substr(1);
     if(currentUrl == config.emails.checkout.url){
         //TODO: capture checkout
         console.log("--CHECKOUT MAIL--");
-        saveMail(config.emails.checkout.existing, "email_checkout_existing", websiteId, sessionId);
-        saveMail(config.emails.checkout.guest,  "email_checkout_guest", websiteId, sessionId);
-        saveMail(config.emails.checkout.new,  "email_checkout_new", websiteId, sessionId);
+        saveMail(config.emails.checkout.existing, "email_checkout_existing", websiteId, userId, sessionId);
+        saveMail(config.emails.checkout.guest,  "email_checkout_guest", websiteId, userId, sessionId);
+        saveMail(config.emails.checkout.new,  "email_checkout_new", websiteId, userId, sessionId);
     } else if (currentUrl == config.emails.login.url){
         //TODO: capture login
         console.log("--LOGIN MAIL--");
-        saveMail(config.emails.login.selector,  "email_login", websiteId, sessionId);
+        saveMail(config.emails.login.selector,  "email_login", websiteId, userId, sessionId);
     } else if (currentUrl == config.emails.register.url){
         //TODO: capture register
         console.log("--REGISTER MAIL--");
-        saveMail(config.emails.register.selector,  "email_register", websiteId, sessionId);
+        saveMail(config.emails.register.selector,  "email_register", websiteId, userId, sessionId);
     }
     //TODO: capture everywhere
-    saveMail(config.emails.everywhere, "email_top_login", websiteId, sessionId);
+    saveMail(config.emails.everywhere, "email_top_login", websiteId, userId, sessionId);
 }
 
 //TODO: Faire des règles plus générique sur les urls
 //TODO: Faire la config approprié au test
-function saveBasket(config, websiteId, sessionId){
+function saveBasket(config, websiteId, userId, sessionId){
     console.log("config url: ", config.basket.url, " current url: ", window.location.pathname.substr(1));
     if(config.basket.url == window.location.pathname.substr(1) || 
         config.basket.url + '/' == window.location.pathname.substr(1) ){
@@ -137,7 +147,7 @@ function saveBasket(config, websiteId, sessionId){
             product_line  = config.basket.product_line ? config.basket.product_line : "",
             linesProducts = Sizzle(config.basket.container + " " + product_line),
             updates = {},
-            basket = 'websites/' + websiteId + '/sessions/' + sessionId + '/basket';
+            basket = 'websites/' + websiteId + '/users/' + userId + '/sessions/' + sessionId + '/basket';
             console.log("linesProducts: ", linesProducts, " selector: ", config.basket.container + " " + product_line);
 
         var saveBasketsHandler = {hotel: saveHotelBasket, retail: saveRetailBasket};
@@ -176,23 +186,27 @@ var saveHotelBasket = function(config, basket, linesProducts, updates){
 var saveRetailBasket = function(config, basket, linesProducts, updates){
     linesProducts.forEach((line, idx) => {
         var product_id = attributeValue(config, 'product_id', line);
-        console.log("Product_id: ", product_id);
+        logger.debug("Product_id: ", product_id);
 
         var product_name = attributeValue(config, 'product_name', line);
-        console.log("Product name: ", product_name);
-        updates[basket + '/products/' + product_id + '/product_name'] = product_name;
+        logger.debug("Product name: ", product_name);
+        if(product_name)
+            updates[basket + '/products/' + product_id + '/product_name'] = product_name;
 
         var product_image = attributeValue(config, 'product_image', line);
-        console.log("Product image: ", product_image);
-        updates[basket + '/products/' + product_id + '/product_image'] = product_image;
+        logger.debug("Product image: ", product_image);
+        if(product_image)
+            updates[basket + '/products/' + product_id + '/product_image'] = product_image;
 
         var product_price = attributeValue(config, 'product_price', line);
-        console.log("Product price: ", product_price);
-        updates[basket + '/products/' + product_id + '/product_price'] = product_price;
+        logger.debug("Product price: ", product_price);
+        if(product_price)
+            updates[basket + '/products/' + product_id + '/product_price'] = product_price;
 
         var product_quantity = attributeValue(config, 'product_quantity', line);
-        console.log("Product quantity: ", product_quantity);
-        updates[basket + '/products/' + product_id + '/product_quantity'] = product_quantity;
+        logger.debug("Product quantity: ", product_quantity);
+        if(product_quantity)
+            updates[basket + '/products/' + product_id + '/product_quantity'] = product_quantity;
         
     });
     return updates;
@@ -205,6 +219,11 @@ var saveRetailBasket = function(config, basket, linesProducts, updates){
 function attributeValue(config, configKeyName, line){
     var configRule = config.basket[configKeyName],
         result = null;
+
+    if(!configRule){
+        console.log("[Warning] No ", configKeyName, " on config.");
+        return false;
+    }  
     if(configRule[0] == '@'){
         var options = configRule.substr(1).split(':');
         var selection = Sizzle(options[0], line);
