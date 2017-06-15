@@ -1,0 +1,21 @@
+Firebase security
+
+
+//tous le monde peux lire les config
+//le reste, uniquement l'app de trigger
+{
+  "rules": {
+    "websites":{
+        "$website": {
+            "config": {
+                ".read": "true"
+            },
+            "users": {
+                ".read": "$uid === auth.uid"
+            }
+        }
+    }
+    ".read": "false",
+    ".write": "true"
+  }
+}
