@@ -1,5 +1,6 @@
 import Cookies from 'js-cookie';
 import * as log from 'loglevel';
+import uuid from 'uuid/V1';
 
 //Return cookie user id and the current session cookie id
 function getCookieSession(){

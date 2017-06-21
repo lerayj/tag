@@ -19,3 +19,33 @@ Firebase security
     ".write": "true"
   }
 }
+
+
+//Query
+
+firebase().database().ref('/websites/kiloutou_fr/users').on('value', function (snapshot) {
+    var users = snapshot.val(),
+        baskets = 0,
+        values = 0,
+        nbUsers = 0,
+        nbSessions = 0;
+    for (var user in users){
+        if(users.hasOwnProperty(user)){
+            nbUsers = nbUsers++;
+            for(var session in user.sessions){
+                if(user.sessions.hasOwnProperty(session)){
+                    nbSessions = nbSessions++;
+                    if(session.basket && session.basket.total){
+                        baskets = basket++;
+                        values = values + session.basket.total;
+                    }
+                }
+            }
+        }
+    }
+    console.log("Nb users: ", nbUsers);
+    console.log("Nb Sessions: ", nbSessions);
+    console.log("Nb Baskets: ", baskets);
+    console.log("Total Baskets Value: ", values);
+    console.log("Average basket value: ", values / baskets);
+});

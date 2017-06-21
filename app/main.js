@@ -1,6 +1,5 @@
 import Sizzle from 'sizzle';
 import firebase from 'firebase';
-import uuid from 'uuid/V1';
 import email_validator from 'email-validator';
 import psl from 'psl';
 import * as log from 'loglevel';
@@ -23,8 +22,8 @@ function runCore(){
 
     //var websiteKey = window.location.hostname.replace(/\./g, "_");
     //console.log("host: ", window.location.host, " psl: ", psl.parse(window.location.host).domain, "real psl: ", psl);
-    //var websiteKey = psl.parse(window.location.host).domain.replace(/\./g, "_");
-    var websiteKey = "toto_com";
+    var websiteKey = psl.parse(window.location.host).domain.replace(/\./g, "_");
+    //var websiteKey = "toto_com";
 
     var user_ids = Cookies.getCookieSession();
 
@@ -79,8 +78,9 @@ function saveMail(selector, type, websiteId, userId, sessionId){
             if(email_validator.validate(mail)){
                 log.info("[DEBUG] Saving ", mail, " as type: ", type);
                 var update = {};
-                update[type] = mail;
-                firebase.database().ref('websites/' + websiteId + '/users/' + userId + '/sessions/' + sessionId + '/emails').update(update);
+                update['value'] = mail;
+                update['saved_at'] = firebase.database.ServerValue.TIMESTAMP;
+                firebase.database().ref('websites/' + websiteId + '/users/' + userId + '/sessions/' + sessionId + '/emails/' + type).update(update);
                 setTimeout(() => { clearInterval(refreshIntervalId); }, 2000);
             }
         }, 500);
@@ -123,6 +123,7 @@ function saveBasket(config, websiteId, userId, sessionId){
         updates = saveBasketsHandler[config.type](config, basket, linesProducts, updates);
         updates[basket + '/total'] = total.replace(/(\r\n\t|\n|\r\t)/gm,"").replace(/^\s+|\s+$/g, "");
         log.info("[DEBUG] Saving basket: ", updates);
+        updates['websites/' + websiteId + '/users/' + userId + '/sessions/' + sessionId + '/saved_at'] = firebase.database.ServerValue.TIMESTAMP;
         firebase.database().ref().update(updates);
     }
 }
