@@ -14,11 +14,11 @@ function setCookies(cookieName, cookieSettings){
     var cookie = Cookies.get(cookieName);
     
     if(cookie){
-        log.info("[DEBUG] Cookie ", cookieName, " already exists: ", cookie);
+        //log.info("[DEBUG] Cookie ", cookieName, " already exists: ", cookie);
     } else {
         Cookies.set(cookieName, uuid(), cookieSettings);
         cookie = Cookies.get(cookieName);
-        log.info("[DEBUG] Cookie ", cookieName, " set to: ", cookie);
+        //log.info("[DEBUG] Cookie ", cookieName, " set to: ", cookie);
     }
     return cookie;
 }

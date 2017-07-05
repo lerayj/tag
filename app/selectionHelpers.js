@@ -22,7 +22,7 @@ function selectValueAttrHandler(config, configKeyName, selectDom, callback){
                 result = optionSelection[0].textContent;
             if(typeof selector == 'object')
                 result = optionSelection[0][selector[1]];
-            log.info("[DEBUG] Tracking select: ", selector, "with value: ", result);
+            //log.info("[DEBUG] Tracking select: ", selector, "with value: ", result);
             callback(result);
         }
         handleOptionSelect(selector, callback);
@@ -56,7 +56,6 @@ function attributeValue(config, configKeyName, line){
         }
 
     } else{
-        console.log("ON attrib: ", configRule, " line: ", line);
         result = Sizzle(configRule, line)[0];
         if(!result) return false;
         result = result.textContent;
