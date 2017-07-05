@@ -28,17 +28,21 @@ function runCore(){
     var user_ids = Cookies.getCookieSession();
 
     getConfig(websiteKey).then((config) => {
+        console.log("CONFIG: ", config);
         if(!config.debug)
             log.setLevel(log.levels.SILENT);
         else
             log.setLevel(log.levels.INFO);
         //Local test
-        log.setLevel(log.levels.INFO);
-        log.info("[DEBUG] Client: ", websiteKey);
-        chooseEmailCapture(config, websiteKey, user_ids.user_cookie, user_ids.session_cookie);
-        saveUserInfo(config, websiteKey, user_ids.user_cookie, user_ids.session_cookie)
-        confirmSoldBasket(config, websiteKey, user_ids.user_cookie, user_ids.session_cookie);
-        saveBasket(config, websiteKey, user_ids.user_cookie, user_ids.session_cookie);
+        if(config.live){
+            log.setLevel(log.levels.INFO);
+            log.info("[DEBUG] Client: ", websiteKey);
+            chooseEmailCapture(config, websiteKey, user_ids.user_cookie, user_ids.session_cookie);
+            saveUserInfo(config, websiteKey, user_ids.user_cookie, user_ids.session_cookie)
+            confirmSoldBasket(config, websiteKey, user_ids.user_cookie, user_ids.session_cookie);
+            saveBasket(config, websiteKey, user_ids.user_cookie, user_ids.session_cookie); 
+        } else
+            log.info("[DEBUG] Client disabled. Pass the option config 'live' to true to go live.");
     });
 }
 
@@ -46,9 +50,21 @@ function runCore(){
 // //Get the config for given website.
 // //Return Promise
 function getConfig(websiteId){
+    var storageConfig = JSON.parse(localStorage.getItem('config_tag_website'));
+    console.log("STorage: ", storageConfig);
+    if(storageConfig)
+        return new Promise((resolve) => {resolve(storageConfig)});
+    
+    console.log("Fetching config from server...");
     return new Promise((resolve, reject) => {
         var conf = firebase.database().ref('websites/' + websiteId + '/config');
-        conf.on('value', snapshot => resolve(snapshot.val()));
+        conf.on('value', (snapshot) => {
+            if(!storageConfig){
+                console.log("Setting storage");
+                localStorage.setItem('config_tag_website', JSON.stringify(snapshot.val()));
+            }
+            resolve(snapshot.val());
+        });
     });
 }
 
@@ -186,7 +202,7 @@ function confirmSoldBasket(config, websiteId, userId, sessionId){
     if(findUrl){
         firebase.database().ref('websites/' + websiteId + '/users/' + userId + '/sessions/' + sessionId).update({converted: true});
         //TODO: handle le cookie sur un panier vendu
-        Cookies.remove('user_tag_id');
+        Cookies.removeCookie('session_id');
     }
     else
         log.info("[DEBUG] Not Converted");

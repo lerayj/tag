@@ -16,11 +16,17 @@ function setCookies(cookieName, cookieSettings){
     if(cookie){
         log.info("[DEBUG] Cookie ", cookieName, " already exists: ", cookie);
     } else {
-        Cookies.set(cookieName, uuid());
+        Cookies.set(cookieName, uuid(), cookieSettings);
         cookie = Cookies.get(cookieName);
         log.info("[DEBUG] Cookie ", cookieName, " set to: ", cookie);
     }
     return cookie;
 }
 
-export default {getCookieSession, setCookies};
+function removeCookie(cookieName){
+    Cookies.remove();
+    Cookies.remove('cookieName');
+}
+
+var removeCookie = Cookies.remove;
+export default {getCookieSession, setCookies, removeCookie};
