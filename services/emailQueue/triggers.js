@@ -53,6 +53,7 @@ function onUpdateSession(refSession, websiteId, userId, sessionId){
             console.log("Session DATA: ", sessionData);
             //Si l'update viens du mail et qu'il y a un basket ou Si l'update viens d'un basket et il y a un mail
             if((rulesHandler.chooseEmail(sessionData.emails) && rulesHandler.sendRulesAccepted(sessionData.basket, rules))){
+                console.log("Starting adding queue");
                 var timer = undefined
                 if(rules == null || rules.delay == null)
                     timer = 1800000;
@@ -61,7 +62,7 @@ function onUpdateSession(refSession, websiteId, userId, sessionId){
                 timer = 3000;
                 //ENDTEST
                 console.log("ADDING TO SEND QUEUE");
-                var timeout = setTimeout(networkHandler.sendMail.bind(this, sessionData, sessionId, websiteId, rulesHandler.chooseEmail(sessionData.emails)), timer);
+                var timeout = setTimeout(networkHandler.sendMail.bind(this, sessionData, sessionId, websiteId, rulesHandler.chooseEmail(sessionData.emails), refSession), timer);
                 emailQueue.push(timeout);
             }
         });

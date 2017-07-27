@@ -6,6 +6,7 @@ module.exports = {
         if(emails){
            var latestMail = _.sortBy(emails, 'saved_at');
            latestMail = _.reverse(latestMail)[0];
+           console.log("latestMail: ", latestMail.value);
            return latestMail.value;
         }
     },

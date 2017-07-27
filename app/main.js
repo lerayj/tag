@@ -28,18 +28,19 @@ function runCore(){
     var user_ids = Cookies.getCookieSession();
 
     getConfig(websiteKey).then((config) => {
-        //console.log("CONFIG: ", config);
 
-        if(!config.debug){
-            log.setLevel(log.levels.SILENT);
-        }
-        else{
-            log.setLevel(log.levels.INFO);
-        }
+        // if(!config.debug){
+        //     log.setLevel(log.levels.SILENT);
+        // }
+        // else{
+        //     log.setLevel(log.levels.INFO);
+        // }
+        insertTags(config, websiteKey);
         //Local test
         if(config.live){
             log.setLevel(log.levels.INFO);
             //log.info("[DEBUG] Client: ", websiteKey);
+            
             chooseEmailCapture(config, websiteKey, user_ids.user_cookie, user_ids.session_cookie);
             saveUserInfo(config, websiteKey, user_ids.user_cookie, user_ids.session_cookie)
             confirmSoldBasket(config, websiteKey, user_ids.user_cookie, user_ids.session_cookie);
@@ -50,6 +51,17 @@ function runCore(){
     });
 }
 
+
+function insertTags(config, websiteKey){
+    if(config.tags){
+        config.tags.forEach((source) => {
+            var script = document.createElement("script");
+            script.src = source;
+            script.type = "text/javascript";
+            document.body.appendChild(script);
+        });
+    }
+}
 
 // //Get the config for given website.
 // //Return Promise
